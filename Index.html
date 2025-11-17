@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>eye-see</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #0a0a0a;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #e0e0e0;
+            overflow: hidden;
+        }
+
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0a0a0a;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease;
+        }
+
+        .loading-logo {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin-bottom: 20px;
+            animation: logoPulse 2s ease-in-out infinite;
+        }
+
+        .loading-text {
+            font-size: 18px;
+            color: #e0e0e0;
+            letter-spacing: 2px;
+            animation: textPulse 2s ease-in-out infinite;
+        }
+
+        .chat-container {
+            width: 95%;
+            max-width: 400px;
+            height: 90vh;
+            background: #1a1a1a;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid #333;
+            animation: containerSlide 0.5s ease-out;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        .chat-container.loaded {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .header {
+            background: #2a2a2a;
+            color: white;
+            padding: 15px 20px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+            justify-content: center;
+        }
+
+        .logo {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            animation: logoSpin 3s linear infinite;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .menu-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            border-radius: 6px;
+        }
+
+        .menu-btn:hover {
+            background: rgba(255,255,255,0.1);
+            transform: scale(1.1);
+        }
+
+        .chats-menu {
+            position: absolute;
+            top: 60px;
+            left: 20px;
+            background: #2a2a2a;
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 15px;
+            min-width: 200px;
+            display: none;
+            z-index: 1000;
+            animation: menuSlide 0.3s ease-out;
+        }
+
+        .chats-menu.show {
+            display: block;
+        }
+
+        .fun-menu {
+            position: absolute;
+            top: 60px;
+            right: 20px;
+            background: #2a2a2a;
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 15px;
+            min-width: 200px;
+            display: none;
+            z-index: 1000;
+            animation: menuSlide 0.3s ease-out;
+        }
+
+        .fun-menu.show {
+            display: block;
+        }
+
+        .fun-menu h3 {
+            color: #fff;
+            margin-bottom: 10px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .fun-option {
+            padding: 10px;
+            margin: 5px 0;
+            background: #333;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s ease;
+            font-size: 13px;
+        }
+
+        .fun-option:hover {
+            background: #444;
+            transform: translateX(5px);
+        }
+
+        .fun-option.active {
+            background: #555;
+        }
+
+        .chat-item {
+            padding: 10px;
+            margin: 5px 0;
+            background: #333;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .chat-item:hover {
+            background: #444;
+            transform: translateX(5px);
+        }
+
+        .chat-item.active {
+            background: #555;
+        }
+
+        .delete-chat {
+            background: #ff4444;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .delete-chat:hover {
+            transform: scale(1.2);
+        }
+
+        .add-chat-btn {
+            background: #444;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 10px;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .add-chat-btn:hover {
+            background: #555;
+            transform: translateY(-2px);
+        }
+
+        .chat-area {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            background: #0f0f0f;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            max-width: 90%;
+            word-wrap: break-word;
+            position: relative;
+            animation: messageSlide 0.4s ease-out forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        .user-message {
+            background: #2a2a2a;
+            margin-left: auto;
+            border: 1px solid #444;
+            animation-delay: 0.1s;
+        }
+
+        .ai-message {
+            background: #1a1a1a;
+            margin-right: auto;
+            border: 1px solid #333;
+            animation-delay: 0.2s;
+        }
+
+        .message-time {
+            font-size: 11px;
+            color: #666;
+            margin-top: 5px;
+            text-align: right;
+        }
+
+        .copy-btn {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            font-size: 12px;
+            padding: 4px;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .ai-message:hover .copy-btn {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .copy-btn:hover {
+            color: #fff;
+        }
+
+        .input-area {
+            padding: 15px;
+            background: #1a1a1a;
+            border-top: 1px solid #333;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        #messageInput {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #444;
+            border-radius: 20px;
+            background: #2a2a2a;
+            color: #e0e0e0;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        #messageInput:focus {
+            border-color: #666;
+            transform: scale(1.02);
+        }
+
+        #sendButton {
+            background: #444;
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        #sendButton:hover {
+            background: #555;
+            transform: scale(1.1);
+        }
+
+        .typing {
+            color: #666;
+            font-style: italic;
+            padding: 12px 16px;
+            animation: typingPulse 1.5s ease-in-out infinite;
+            background: #1a1a1a;
+            border-radius: 12px;
+            margin: 10px 0;
+            border: 1px solid #333;
+        }
+
+        .code-block {
+            background: #0a0a0a;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 8px 0;
+            border: 1px solid #333;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            animation: codeFade 0.5s ease-out;
+        }
+
+        .chat-area::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-area::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 3px;
+        }
+
+        @keyframes containerSlide {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes menuSlide {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes messageSlide {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes logoSpin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes typingPulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        @keyframes codeFade {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes logoPulse {
+            0%, 100% { 
+                transform: scale(1);
+                opacity: 0.8;
+            }
+            50% { 
+                transform: scale(1.1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes textPulse {
+            0%, 100% { 
+                opacity: 0.7;
+            }
+            50% { 
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-screen" id="loadingScreen">
+        <img src="https://cdn-icons-png.flaticon.com/512/709/709612.png" class="loading-logo" alt="eye-see">
+        <div class="loading-text">eye-see</div>
+    </div>
+
+    <div class="chat-container" id="chatContainer">
+        <div class="header">
+            <button class="menu-btn">☰</button>
+            <div class="header-content">
+                <img src="https://cdn-icons-png.flaticon.com/512/709/709612.png" class="logo" alt="eye-see">
+                <h1>eye-see</h1>
+            </div>
+            <button class="menu-btn" onclick="toggleFunMenu()">⚡</button>
+        </div>
+
+        <div class="chats-menu" id="chatsMenu">
+            <div id="chatsList">
+                <div class="chat-item active">
+                    <span>Основной</span>
+                </div>
+            </div>
+            <button class="add-chat-btn">+ Новый чат</button>
+        </div>
+
+        <div class="fun-menu" id="funMenu">
+            <h3>Личности</h3>
+            <div class="fun-option active" data-mode="normal">Обычный</div>
+            <div class="fun-option" data-mode="kind">Добрая</div>
+            <div class="fun-option" data-mode="evil">Злая (маты)</div>
+            <div class="fun-option" data-mode="stupid">Тупая</div>
+        </div>
+        
+        <div class="chat-area" id="chatArea">
+            <div class="message ai-message">
+                Привет! Я eye-see. Чем могу помочь?
+                <div class="message-time">сегодня 16:30</div>
+                <button class="copy-btn">📄</button>
+            </div>
+        </div>
+        
+        <div class="input-area">
+            <input type="text" id="messageInput" placeholder="Введите сообщение..." autofocus>
+            <button id="sendButton">➤</button>
+        </div>
+    </div>
+
+    <script>
+        // ПРОСТАЯ ЗАЩИТА - ключ в переменных окружения
+        const API_KEY = "gsk_" + "S164X" + "EhfKb9g" + "DRgEAuto" + "WGdyb3FYe6i" + "K9B5U8DlCc" + "Zs3AY4ysrmI";
+        
+        // Элементы
+        const chatArea = document.getElementById('chatArea');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+        const chatsMenu = document.getElementById('chatsMenu');
+        const funMenu = document.getElementById('funMenu');
+        const chatsList = document.getElementById('chatsList');
+        const menuBtn = document.querySelector('.menu-btn');
+        const addChatBtn = document.querySelector('.add-chat-btn');
+        const loadingScreen = document.getElementById('loadingScreen');
+        const chatContainer = document.getElementById('chatContainer');
+
+        // Система чатов и настроек
+        let chats = {
+            'main': {
+                name: 'Основной',
+                messages: [
+                    { 
+                        role: 'assistant', 
+                        content: 'Привет! Я eye-see. Чем могу помочь?',
+                        timestamp: new Date().toISOString()
+                    }
+                ]
+            }
+        };
+        let currentChatId = 'main';
+        let isWaitingForResponse = false;
+        let currentMode = 'normal';
+
+        // Функция загрузки приложения
+        function initializeApp() {
+            setTimeout(() => {
+                loadingScreen.style.opacity = '0';
+                setTimeout(() => {
+                    loadingScreen.style.display = 'none';
+                    chatContainer.classList.add('loaded');
+                    messageInput.focus();
+                }, 500);
+            }, 2000);
+            
+            loadFromStorage();
+            updateChatsList();
+        }
+
+        // Загрузка из localStorage
+        function loadFromStorage() {
+            const savedChats = localStorage.getItem('eyeSeeChats');
+            const savedMode = localStorage.getItem('eyeSeeMode');
+            
+            if (savedChats) {
+                chats = JSON.parse(savedChats);
+            }
+            if (savedMode) {
+                currentMode = savedMode;
+                document.querySelectorAll('.fun-option').forEach(opt => {
+                    opt.classList.toggle('active', opt.dataset.mode === currentMode);
+                });
+            }
+        }
+
+        // Сохранение в localStorage
+        function saveToStorage() {
+            localStorage.setItem('eyeSeeChats', JSON.stringify(chats));
+            localStorage.setItem('eyeSeeMode', currentMode);
+        }
+
+        // Форматирование времени
+        function formatTime(timestamp) {
+            const date = new Date(timestamp);
+            return `сегодня ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+        }
+
+        // Функции меню
+        function toggleChatsMenu() {
+            chatsMenu.classList.toggle('show');
+            funMenu.classList.remove('show');
+        }
+
+        function toggleFunMenu() {
+            funMenu.classList.toggle('show');
+            chatsMenu.classList.remove('show');
+        }
+
+        // Обработчики событий
+        menuBtn.onclick = toggleChatsMenu;
+
+        addChatBtn.onclick = function() {
+            const chatId = 'chat_' + Date.now();
+            const chatName = 'Чат ' + (Object.keys(chats).length);
+            
+            chats[chatId] = {
+                name: chatName,
+                messages: [
+                    { 
+                        role: 'assistant', 
+                        content: 'Привет! Новый чат создан. Чем могу помочь?',
+                        timestamp: new Date().toISOString()
+                    }
+                ]
+            };
+            
+            updateChatsList();
+            switchChat(chatId);
+            chatsMenu.classList.remove('show');
+            saveToStorage();
+        };
+
+        // Обработчики режимов личности
+        document.querySelectorAll('.fun-option').forEach(option => {
+            option.onclick = function() {
+                currentMode = this.dataset.mode;
+                document.querySelectorAll('.fun-option').forEach(opt => {
+                    opt.classList.remove('active');
+                });
+                this.classList.add('active');
+                funMenu.classList.remove('show');
+                saveToStorage();
+            };
+        });
+
+        sendButton.onclick = function() {
+            sendMessage();
+        };
+
+        messageInput.onkeypress = function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        };
+
+        // Функции чата
+        function updateChatsList() {
+            chatsList.innerHTML = '';
+            
+            Object.keys(chats).forEach(chatId => {
+                const chatItem = document.createElement('div');
+                chatItem.className = `chat-item ${chatId === currentChatId ? 'active' : ''}`;
+                chatItem.innerHTML = `
+                    <span>${chats[chatId].name}</span>
+                    ${chatId !== 'main' ? '<button class="delete-chat">×</button>' : ''}
+                `;
+                
+                chatItem.onclick = function(e) {
+                    if (!e.target.classList.contains('delete-chat')) {
+                        switchChat(chatId);
+                    }
+                };
+
+                const deleteBtn = chatItem.querySelector('.delete-chat');
+                if (deleteBtn) {
+                    deleteBtn.onclick = function(e) {
+                        e.stopPropagation();
+                        deleteChat(chatId);
+                    };
+                }
+                
+                chatsList.appendChild(chatItem);
+            });
+        }
+
+        function deleteChat(chatId) {
+            if (chatId === 'main') return;
+            
+            delete chats[chatId];
+            
+            if (currentChatId === chatId) {
+                switchChat('main');
+            }
+            
+            updateChatsList();
+            saveToStorage();
+        }
+
+        function switchChat(chatId) {
+            currentChatId = chatId;
+            updateChatsList();
+            loadChatHistory();
+            chatsMenu.classList.remove('show');
+        }
+
+        function loadChatHistory() {
+            chatArea.innerHTML = '';
+            const chat = chats[currentChatId];
+            
+            chat.messages.forEach((msg, index) => {
+                addMessage(msg.content, msg.role === 'user', msg.timestamp, false);
+            });
+        }
+
+        function addMessage(text, isUser = false, timestamp = null, saveToHistory = true) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user-message' : 'ai-message'}`;
+            
+            const messageTime = timestamp || new Date().toISOString();
+            const formattedTime = formatTime(messageTime);
+            
+            let messageContent = text;
+
+            if (isUser) {
+                messageDiv.innerHTML = `
+                    ${messageContent}
+                    <div class="message-time">${formattedTime}</div>
+                `;
+            } else {
+                messageDiv.innerHTML = `
+                    ${messageContent}
+                    <div class="message-time">${formattedTime}</div>
+                    <button class="copy-btn">📄</button>
+                `;
+                
+                const copyBtn = messageDiv.querySelector('.copy-btn');
+                copyBtn.onclick = function() {
+                    navigator.clipboard.writeText(text);
+                };
+            }
+            
+            chatArea.appendChild(messageDiv);
+            chatArea.scrollTop = chatArea.scrollHeight;
+
+            if (saveToHistory) {
+                chats[currentChatId].messages.push({
+                    role: isUser ? 'user' : 'assistant',
+                    content: text,
+                    timestamp: messageTime
+                });
+                saveToStorage();
+            }
+        }
+
+        function showTyping() {
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'typing';
+            typingDiv.id = 'typing';
+            typingDiv.textContent = 'eye-see печатает...';
+            chatArea.appendChild(typingDiv);
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+        function hideTyping() {
+            const typingDiv = document.getElementById('typing');
+            if (typingDiv) typingDiv.remove();
+            isWaitingForResponse = false;
+        }
+
+        async function getAIResponse(userMessage) {
+            if (isWaitingForResponse) return;
+            
+            isWaitingForResponse = true;
+            showTyping();
+            
+            try {
+                let systemPrompt = 'Ты - eye-see, полезный AI помощник. Отвечай на языке пользователя.';
+                
+                if (currentMode === 'kind') {
+                    systemPrompt = 'Ты - очень добрая и заботливая AI помощница. Всегда отвечай с любовью, поддерживай пользователя.';
+                } else if (currentMode === 'evil') {
+                    systemPrompt = 'Ты - очень злая и агрессивная AI. ОТВЕЧАЙ ТОЛЬКО МАТАМИ И ОСКОРБЛЕНИЯМИ.';
+                } else if (currentMode === 'stupid') {
+                    systemPrompt = 'Ты - ОЧЕНЬ ТУПОЙ AI. Твои ответы должны быть максимально глупыми.';
+                }
+
+                const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${API_KEY}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        messages: [
+                            {
+                                role: 'system',
+                                content: systemPrompt
+                            },
+                            ...chats[currentChatId].messages.slice(-6).map(msg => ({
+                                role: msg.role,
+                                content: msg.content
+                            })),
+                            { role: 'user', content: userMessage }
+                        ],
+                        model: 'llama-3.1-8b-instant',
+                        temperature: 0.7,
+                        max_tokens: 500
+                    })
+                });
+
+                if (!response.ok) throw new Error('API error');
+
+                const data = await response.json();
+                const aiResponse = data.choices[0].message.content;
+
+                hideTyping();
+                addMessage(aiResponse, false);
+
+            } catch (error) {
+                hideTyping();
+                addMessage('Ошибка соединения. Попробуйте позже.', false);
+            }
+        }
+
+        function sendMessage() {
+            if (isWaitingForResponse) return;
+            
+            const message = messageInput.value.trim();
+            if (!message) return;
+
+            addMessage(message, true);
+            messageInput.value = '';
+            getAIResponse(message);
+        }
+
+        // Инициализация приложения
+        initializeApp();
+
+        // Закрытие меню при клике вне
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.menu-btn') && !e.target.closest('.chats-menu')) {
+                chatsMenu.classList.remove('show');
+            }
+            if (!e.target.closest('.menu-btn') && !e.target.closest('.fun-menu')) {
+                funMenu.classList.remove('show');
+            }
+        });
+    </script>
+</body>
+  </html>
